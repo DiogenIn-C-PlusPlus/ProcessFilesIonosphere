@@ -213,9 +213,9 @@ void SolveMof()
 void SolvePrognosticFreqAustralia()
 {
     //std::string path = "E:\\Ionosphere\\MOF\\Data_prognostic\\Alis_spring_15_03_25\\AUSTR_dasf_15_03_25.txt";
-    std::string path = "/home/vladimir/Ionosphere/Results/Alis_modeling/Alis_dasf_12_25.txt";
-    std::string name_file_freq = "12_25_Als_F_Probility.txt";
-    std::string name_file_amplitude = "12_25_Als_A_Probility.txt";
+    std::string path = "/home/vladimir/Ionosphere/Results/Alis_modeling/Alis_dasf_11_25.txt";
+    std::string name_file_freq = "11_25_Als_F_Probility.txt";
+    std::string name_file_amplitude = "11_25_Als_A_Probility.txt";
     file::ReadFile readfile(path);
     //readfile.TakeFilesFromDirectory(path); если несколько файлов
     readfile.ReadFileFreqAustralia();
@@ -253,8 +253,8 @@ int main()
 {
     //ChooseName();
     //  Tests();
- //   SolvePrognosticFreqAustralia();
+    SolvePrognosticFreqAustralia();
  //   SolveMof();
-      SolvePrognosticFreqCyprus();
+ //     SolvePrognosticFreqCyprus();
     return 0;
 }

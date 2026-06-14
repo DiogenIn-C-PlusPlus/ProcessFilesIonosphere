@@ -375,7 +375,14 @@ void Proccess::TakeInfoTimeAndFreqPrognosticRouteAustralia() // Доделать
                            prognostic_freq_.time_amplitude_in_files[element.time_persent * coeff_for_double_time_to_int] = temp;
                         }
                     }
-                  prognostic_freq_.time_freq[element.time_persent * coeff_for_double_time_to_int].push_back(element.freq_hop_5);
+                  if(std::abs(element.freq_hop_5) - 0 < 1e-3)
+                  {
+                      prognostic_freq_.time_freq[element.time_persent * coeff_for_double_time_to_int].push_back(element.max_freq_hop);
+                  }
+                  else
+                  {
+                    prognostic_freq_.time_freq[element.time_persent * coeff_for_double_time_to_int].push_back(element.freq_hop_5);
+                  }
                   amplitude_per_step.clear();
                   iterator = 0;
                 }

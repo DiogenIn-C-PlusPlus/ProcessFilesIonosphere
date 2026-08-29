@@ -1,260 +1,77 @@
-#include <cassert>
-#include <cmath>
-#include <cstdint>
-
+#include "measumentfactory.h"
 #include "readfile.h"
-#include "proccess.h"
-#include "outputfile.h"
 
-// Для считывания файла меняем структуру Format_file, под файл который у нас будет,
-// далее меняем в методе Read() считываемые поля Format_line
+#include "magic_enum.hpp"
 
-//void TestMiddleValue()
-//{
-//    using namespace file;
-//    std::vector<double> numbers = {1,2,3,4,5,6,7,8,9,10}; // Подсчет
-//    Proccess prosses;
-//    assert(std::abs(5.5 - prosses.MiddleValue(numbers)) < 1e-5);
-//    std::vector<double> numbers1; // empty
-//    assert(std::abs(0 - prosses.MiddleValue(numbers1)) < 1e-5);
-//    std::vector<double> numbers2{2};
-//    assert(std::abs(2 - prosses.MiddleValue(numbers2)) < 1e-5);
-//}
-
-//void TestDispersion()
-//{
-//    using namespace file;
-//    Proccess proccess;
-//    std::vector<double> numbers = {12,23,45,33,65,54,54};
-//    double middle = proccess.MiddleValue(numbers);
-//    assert(std::abs(40.857 - middle)  < 1e-3);
-//    double dispersion = proccess.ComputeDispersion(numbers, middle);
-//    assert(std::abs(359.81 - dispersion) < 1e-2); // Заменить на СКО
-//    std::vector<double> test;
-//    assert(std::abs(0 - proccess.ComputeDispersion(test, 0)) < 1e-5);
-//}
-
-//void TestStandartDeviation()
-//{
-//    using namespace file;
-//    Proccess proccess;
-//    std::vector<double> numbers = {12,23,45,33,65,54,54};
-//    double middle = proccess.MiddleValue(numbers);
-//    assert(std::abs(40.857 - middle)  < 1e-3);
-//    double dispersion = proccess.ComputeDispersion(numbers, middle);
-//    assert(std::abs(sqrt(359.81) - proccess.ComputeStandartDeviation(dispersion)) < 1e-2); // Заменить на СКО
-//    assert(std::abs(0 - proccess.ComputeStandartDeviation(-1)) < 1e-5);
-//}
-
-//void TestChangeTimeToUt()
-//{
-//    using namespace file;
-//    Proccess proccess;
-//    uint32_t time_early = 7000;
-//    assert(proccess.ChangeMoscowTimeToUt(time_early) == 17800);
-//    uint32_t time_late = 82800;
-//    assert(proccess.ChangeMoscowTimeToUt(time_late) == 7200);
-//}
-
-//void TestComputeStandartDeviation()
-//{
-//    using namespace file;
-//    Proccess proccess;
-//    std::vector<double> numbers = {12,23,45,33,65,54,54};
-//    double middle = proccess.MiddleValue(numbers);
-//    assert(std::abs(40.857 - middle)  < 1e-3);
-//    double dispersion = proccess.ComputeDispersion(numbers, middle);
-//    assert(std::abs(359.81 - dispersion) < 1e-2);
-//    std::vector<double> numbers1{};
-//    assert(std::abs(0 - proccess.ComputeDispersion(numbers1, 2)) < 1e-2);
-//    std::vector<double> numbers2{4};
-//    assert(std::abs(0 - proccess.ComputeDispersion(numbers2, 2)) < 1e-2);
-//}
-
-//void TestTakeInfoTimeAndMof()
-//{
-//    using namespace file;
-//    Proccess proccess;
-//    uint16_t size_window = 10800;
-//    proccess.SetTimeWindow(size_window);
-//    ReadFile read("test.txt");
-//    read.ReadMof();
-//    proccess.TakeInfoTimeAndMof();
-//    assert(proccess.mof_.time_per_sec_and_mof_[1].size() != 0); // Если стреляет данный ассерт, посмотри, сколько данных в файле - возможно нужно изменить размер временного окна (На самом деле, это символическая проверка)
-//}
-
-//void TestComputeTimeAndMiddleMof()
-//{
-//    using namespace file;
-//    Proccess proccess;
-//    uint16_t size_window = 10800;
-//    proccess.SetTimeWindow(size_window);
-//    ReadFile read("test.txt");
-//    read.ReadMof();
-//    proccess.ComputeTimeAndMiddleMof();
-//    assert(proccess.mof_.time_and_middle_mof_.size() != 0);
-//  //  assert(proccess.mof_.time_and_middle_mof_.size() == ) кол-во строк в файле <Если стреляет данный ассерт, посмотри, сколько данных в файле - возможно нужно изменить размер временного окна> так и есть в одно окно может несколько значений попадать, отсюда равенства не будет
-//}
-
-//void TestComputeTimeAndDispersionMof()
-//{
-//    using namespace file;
-//    Proccess proccess;
-//    uint16_t size_window = 10800;
-//    proccess.SetTimeWindow(size_window);
-//    ReadFile read("test.txt");
-//    read.ReadMof();
-//    proccess.ComputeTimeAndDispersionAndStandartDeviashionMof();
-//    assert(proccess.mof_.time_and_dispersion_.size() != 0);
-////  assert(proccess.mof_.time_and_middle_mof_.size() == ) кол-во строк в файле <Если стреляет данный ассерт, посмотри, сколько данных в файле - возможно нужно изменить размер временного окна> так и есть в одно окно может несколько значений попадать, отсюда равенства не будет
-//}
-
-//void TestProccess()
-//{
-//    TestMiddleValue();
-//    TestDispersion();
-//    TestChangeTimeToUt();
-//    TestStandartDeviation();
-////    TestTakeInfoTimeAndMof();
-////    TestComputeTimeAndMiddleMof();
-////    TestComputeTimeAndDispersionMof();
-//}
-
-//void TestSumFiles()
-//{
-//    using namespace file;
-//    std::string name = "first.txt";
-//    std::string name1 = "second.txt";
-//    std::ofstream file_first(name);
-//    std::ofstream file_second(name1);
-//    file_first << "first" << std::endl <<"or no?" << std::endl;
-//    file_second << "second" << std::endl <<"or no?" << std::endl;
-//    assert(file_first.tellp() == 2);
-//    ReadFile read;
-//    read.SumFiles(name, name1);
-//    assert(file_first.tellp() == 4);
-//}
-
-//void TestAddFile()
-//{
-//    using namespace file;
-//    ReadFile read;
-//    std::string text = "start.txt";
-//    assert(read.files_.size() == 0);
-//    read.AddFile(text);
-//    assert(read.files_.size() == 1);
-//}
-
-//void TestReadMof()
-//{
-//    using namespace file;
-//    ReadFile read("test.txt");
-//    read.ReadMof();
-//    assert(read.file_.size() != 0);
-//}
-
-//void TestReadFile()
-//{
-//    TestSumFiles();
-//    TestAddFile();
-//    TestReadMof();
-//}
-
-//void TestCalculateCountDataInWindowTime()
-//{
-//    using namespace file;
-//    ReadFile read("test.txt");
-//    read.ReadMof();
-//    Proccess proccess(read, 500);
-//    OutPutFile output(proccess);
-//    assert(output.count_points_in_time_window_.size() != 0);
-//}
-
-//void TestTransformTimeFromSeconds()
-//{
-//   using namespace file;
-//   OutPutFile outfile;
-//    assert(2 == outfile.TransformTimeFromSeconds(7200, 3600));
-//}
-
-//void TestOutPutFile()
-//{
-//    TestCalculateCountDataInWindowTime();
-//    TestTransformTimeFromSeconds();
-//}
-
-//void Tests()
-//{
-//    std::cout << "\t Start" << std::endl;
-// //   TestReadFile();
-//    TestProccess();
-// //   TestOutPutFile();
-//    std::cout << "\t End" << std::endl;
-//}
-
-void SolveMof()
+void SolvePrognosticAlis() // Пронгоз, указывается только файл откуда брать данные
 {
-    std::string path = "/home/vladimir/Ionosphere/Source/Kipr_12.dat";
-    //std::string path = "e:\\Ionosphere\\MOF\\MOF_after_selection_data\\Alis_spring_\\05_25.dat";
-    std::string name_result_file = "MOF_Kipr_size_3600_step_500kHz_12.txt";
-    uint16_t time_window_in_sec =3600;
-    file::ReadFile readfile(path);
-    readfile.ReadMof();
-    file::Proccess proccess(readfile.GetReadMof(), time_window_in_sec);
-    proccess.TakeInfoTimeAndMof();
-    proccess.SelectionData(true);
-    proccess.ComputeTimeAndMiddleMof();
-    proccess.ComputeTimeAndDispersionAndStandartDeviashionMof();
-    file::OutPutFile output(proccess.GetDataMof());
-    output.ShowMinimumsColomsDataMof(10);
-    output.PrintFileMof(std::move(name_result_file), time_window_in_sec);
+    RouteSettings settings_alis;
+    const std::string path_to_proccess_files = "/home/andrew_q/Projects/Diogen/Proc_Files_Ionosphere/Source";
+    ReadFile read_file(path_to_proccess_files);
+    read_file.TakeAllFilesFromDir();
+    for(const auto& path_or_name_file : read_file.GetAllFilesInDir())
+    {
+        settings_alis.name_file_prognistic = path_or_name_file.path_file_;
+        auto alis_prognostic = MeasumentRoute(RouteType::AlisSprings, settings_alis, path_or_name_file.name_file_);
+        alis_prognostic->MeasurmentRouteModellingMof();
+    }
+    //settings_alis.name_file_prognistic = "/home/andrew_q/Projects/Diogen/Proc_Files_Ionosphere/build/G-u041eu0442u043bu0430u0434u043au0430/Alis_dasf_04_25.txt";
 }
 
-void SolvePrognosticFreqAustralia()
+void SolvePrognosticCyprus()
 {
-    //std::string path = "E:\\Ionosphere\\MOF\\Data_prognostic\\Alis_spring_15_03_25\\AUSTR_dasf_15_03_25.txt";
-    std::string path = "/home/vladimir/Ionosphere/Results/Alis_modeling/Alis_dasf_11_25.txt";
-    std::string name_file_freq = "11_25_Als_F_Probility.txt";
-    std::string name_file_amplitude = "11_25_Als_A_Probility.txt";
-    file::ReadFile readfile(path);
-    //readfile.TakeFilesFromDirectory(path); если несколько файлов
-    readfile.ReadFileFreqAustralia();
-    file::Proccess proccess(readfile.GetReadPrognosticFreqAustralia(), 5, 30);
-    proccess.TakeInfoTimeAndFreqPrognosticRouteAustralia();
-    file::OutPutFile output(proccess.GetDataPrognosticFreq());
-    output.PrintFilePrognosticFreq(name_file_freq, proccess.ComputeMiddlePrognosticMof());
-    output.PrintFilePrognosticFreqAmplitude(name_file_amplitude);
+    RouteSettings settings_cyprus;
+    const std::string path_to_proccess_files = "/home/andrew_q/Projects/Diogen/Proc_Files_Ionosphere/Source";
+    ReadFile read_file(path_to_proccess_files);
+    read_file.TakeAllFilesFromDir();
+    for(const auto& path_or_name_file : read_file.GetAllFilesInDir())
+    {
+        settings_cyprus.name_file_prognistic = path_or_name_file.path_file_;
+        auto cyprus_prognostic = MeasumentRoute(RouteType::Cyprus, settings_cyprus, path_or_name_file.name_file_);
+        cyprus_prognostic->MeasurmentRouteModellingMof();
+    }
 }
 
-void SolvePrognosticFreqCyprus()
+void SolveExperementalAlis()
 {
-    std::string path = "/home/vladimir/Ionosphere/Results/Kipr_modeling/Kipr_dasf_03_25.txt";
-//    std::string path = "E:\\Ionosphere\\MOF\\Data_prognostic\\Kipr_dasf_150525\\KIPR_dasf_15_05_25.txt";
-    std::string name_file_freq = "03_25_Cyp_F.txt";
-    std::string name_file_amplitude = "03_25_Cyp_A.txt";
-    //  readfile.TakeFilesFromDirectory(path); если несколько файлов
-    file::ReadFile readfile(path);
-    readfile.ReadFileFreqCyprus();
-    file::Proccess proccess(readfile.GetReadPrognosticFreqCyprus(), 5, 30);
-    proccess.TakeInfoTimeAndFreqPrognosticRouteCyprus();
-    file::OutPutFile output(proccess.GetDataPrognosticFreq());
-    output.PrintFilePrognosticFreq(name_file_freq, proccess.ComputeMiddlePrognosticMof());
-    output.PrintFilePrognosticFreqAmplitude(name_file_amplitude);
+    const std::string path_to_proccess_files = "/home/andrew_q/Projects/Diogen/Proc_Files_Ionosphere/Source";
+    RouteSettings settings;
+    ReadFile read_file(path_to_proccess_files);
+    read_file.TakeAllFilesFromDir();
+    settings.time_window = 3600;
+    settings.step_khz = 1000;
+    settings.type = TypeHistogram::Probility;
+    for(const auto& path_or_name_file : read_file.GetAllFilesInDir())
+    {
+        settings.name_file_output_experimental_file = path_or_name_file.name_file_ + "_" + static_cast<std::string>(magic_enum::enum_name(settings.type))  +  "_ " + std::to_string(settings.step_khz) + "kHz.txt";
+        settings.name_experimental_file = path_or_name_file.path_file_;
+        auto alis_experimental = MeasumentRoute(RouteType::AlisSprings, settings, path_or_name_file.name_file_);
+        alis_experimental->MeasurmentRouteExperimentMof();
+    }
 }
 
-void ChooseName()
+void SolveExperementalCyprus()
 {
-    std::string path = "e:\\Ionosphere\\MOF\\Data_from_pelengator\\Kipr\\2024\\bmp\\11";
-    file::ReadFile readfile(path);
-    readfile.ChooseNameFiles(path, "#");
+    const std::string path_to_proccess_files = "/home/andrew_q/Projects/Diogen/Proc_Files_Ionosphere/Source";
+    RouteSettings settings;
+    ReadFile read_file(path_to_proccess_files);
+    read_file.TakeAllFilesFromDir();
+    settings.time_window = 1800;
+    settings.step_khz = 1000;
+    settings.type = TypeHistogram::Probility;
+    for(const auto& path_or_name_file : read_file.GetAllFilesInDir())
+    {
+        settings.name_file_output_experimental_file = path_or_name_file.name_file_ + "_" + static_cast<std::string>(magic_enum::enum_name(settings.type))  +  "_ " + std::to_string(settings.step_khz) + "kHz.txt";
+        settings.name_experimental_file = path_or_name_file.path_file_;
+        auto cyprus_experimental = MeasumentRoute(RouteType::Cyprus, settings, path_or_name_file.name_file_);
+        cyprus_experimental->MeasurmentRouteExperimentMof();
+    }
 }
+
 
 int main()
 {
-    //ChooseName();
-    //  Tests();
-    SolvePrognosticFreqAustralia();
- //   SolveMof();
- //     SolvePrognosticFreqCyprus();
+    //SolvePrognosticAlis();
+    SolveExperementalAlis();
     return 0;
 }

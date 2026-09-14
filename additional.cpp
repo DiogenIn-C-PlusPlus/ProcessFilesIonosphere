@@ -21,3 +21,20 @@ void TranslateSymbolToZero(std::string& line, char symbol)
         }
     }
 }
+
+std::vector<FileInfo> TakeAllFilesFromDir(const std::string& path_file)
+{
+    std::vector<FileInfo> name_file_and_path_in_dir;
+    for(const auto& name_file : std::filesystem::directory_iterator(path_file))
+    {
+        if(!std::filesystem::is_directory(name_file))
+        {
+            name_file_and_path_in_dir.emplace_back(name_file.path().filename().string(), name_file.path().string());
+        }
+    }
+    std::sort(name_file_and_path_in_dir.begin(), name_file_and_path_in_dir.end(), [] (const FileInfo& lhs, const FileInfo& rhs)
+    {
+        return lhs.name_file < rhs.name_file;
+    });
+    return name_file_and_path_in_dir;
+}

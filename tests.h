@@ -7,13 +7,14 @@
 #include "proccess.h"
 #include "readfile.h"
 #include "outputfile.h"
+#include "buildhistogram.h"
 
 class Tests
 {
 public:
     Tests();
-private:
     void AllTests();
+private:
     void TestMiddleValue();
     void TestDispersion();
     void TestStandartDeviation();
@@ -27,6 +28,7 @@ private:
     void TestReadMof();
     void TestCalculateCountDataInWindowTime();
     void TestTransformTimeFromSeconds();
+    void TestHistogram();
 };
 
 

@@ -13,9 +13,10 @@ enum class RouteType
 
 struct RouteSettings
 {
-    std::string name_experimental_file;
-    std::string name_file_output_experimental_file;
-    std::string name_file_prognistic;
+    std::string path_experimental_file;
+    std::string name_trace_data;
+    std::string path_file_prognistic;
+    std::string path_results;
     double similary;
     double start_size_window_part_stan_dev;
     size_t step_khz;
@@ -23,4 +24,4 @@ struct RouteSettings
     uint16_t time_window;
 };
 
-std::unique_ptr<AlgorithmSkeleton> MeasumentRoute(RouteType type, RouteSettings settings, const std::string& name_trace_data);
+std::unique_ptr<AlgorithmSkeleton> MeasumentRoute(RouteType type, RouteSettings settings);

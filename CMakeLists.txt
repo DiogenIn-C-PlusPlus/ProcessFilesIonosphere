@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(Proc_Files_Ionosphere main.cpp
-    proccess.cpp proccess.h readfile.cpp readfile.h buildhistogram.h buildhistogram.cpp formatfiles.h tests.h tests.cpp additional.h additional.cpp cyprus.h cyprus.cpp
+    proccess.cpp proccess.h buildhistogram.h buildhistogram.cpp formatfiles.h tests.h tests.cpp additional.h additional.cpp cyprus.h cyprus.cpp
     alissprings.h alissprings.cpp algorithmskeleton.h algorithmskeleton.cpp measumentfactory.h measumentfactory.cpp
     additional.cpp additional.h algorithmskeleton.cpp algorithmskeleton.h alissprings.cpp alissprings.h buildhistogram.cpp buildhistogram.h magic_enum.hpp )
 

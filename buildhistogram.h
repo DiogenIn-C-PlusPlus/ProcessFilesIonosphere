@@ -32,6 +32,7 @@ public:
     std::vector<double> HistogramProbilityWindow(const std::vector<T>& vec);
     template <typename T>
     std::vector<double> HistogramEveryWindow(const std::vector<T>& vec);
+    virtual ~BuildHistogram() = default;
 private:
     size_t step_mhz_;
     double similary_;
@@ -180,7 +181,8 @@ std::vector<double> BuildHistogram::HistogramProbilityWindow(const std::vector<T
         {
             continue;
         }
-        result.push_back(Proccess::MiddleValue(elem.collection_for_window) * elem.collection_for_window.size() / count_elemets_time_window); // time window - это кол-во эл-тов всех во временном окне (все для данного набора частот)
+        double probility_coeff = elem.collection_for_window.size() / static_cast<double>(count_elemets_time_window); // time window - это кол-во эл-тов всех во временном окне (все для данного набора частот)
+        result.push_back(Proccess::MiddleValue(elem.collection_for_window) * probility_coeff);
     }
     return result;
 }

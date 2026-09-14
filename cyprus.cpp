@@ -1,20 +1,19 @@
 #include "cyprus.h"
 
 
-Cyprus::Cyprus(uint16_t time_window, const std::string& name_trace_data, const std::string &name_experimental_file, const std::string &name_file_output_experimental_file, size_t step_mhz, double similary, double start_size_window_part_stan_dev, TypeHistogram type, const std::string &name_file_prognistic)
-    : AlgorithmSkeleton(time_window, name_trace_data, name_experimental_file, name_file_output_experimental_file),
+Cyprus::Cyprus(uint16_t time_window, const std::string& name_trace_data, const std::string &name_experimental_file, size_t step_mhz, double similary, double start_size_window_part_stan_dev, TypeHistogram type, const std::string &path_file_prognostic)
+    : AlgorithmSkeleton(time_window, name_trace_data, name_experimental_file),
       BuildHistogram(step_mhz, similary, start_size_window_part_stan_dev),
       type_(type),
-      name_file_prognostic_(name_file_prognistic)
+      path_file_prognostic_(path_file_prognostic)
 {}
 
 void Cyprus::FilterDataMofAndTransformTimeToUt()
 {
     std::vector<double> filtered_mof;
-    double converse_time_for_hours = 1000;
     for(const auto& [time, mof] : mof_.time_per_sec_and_raw_mof)
     {
-        auto key = Proccess::ChangeMoscowTimeToUtInHours(Proccess::TransformTimeFromSeconds(time, time_window_)) * converse_time_for_hours;
+        auto key = Proccess::ChangeMoscowTimeToUtInHours(Proccess::TransformTimeFromSeconds(time, time_window_)) * converse_time;
         if(mof.size() > minimum_elements_)
         {
             filtered_mof.clear();
@@ -48,10 +47,6 @@ void Cyprus::SelectionDataHistogram()
         {
             for(const auto& [time, collection_mof] : mof_.time_per_sec_and_filtered_mof)
             {
-                if(time == 11500)
-                {
-                    std::string name;
-                }
                 mof_.time_per_sec_and_selection_hist_mof[time] = BuildHistogram::HistogramProbilityWindow(collection_mof);
             }
             break;
@@ -113,7 +108,7 @@ void Cyprus::ComputeDispersionAndStandartDeviashionMof()
 
 void Cyprus::ReadFileModellingMof()
 {
-    std::ifstream in(name_file_prognostic_, std::ios::in);
+    std::ifstream in(path_file_prognostic_, std::ios::in);
     if(!in.is_open())
     {
         std::cerr << "File not open -> adress readfile -> function Read()" << std::endl;
@@ -140,17 +135,15 @@ void Cyprus::SelectionFreqAndAmplitude()
 {
     std::vector<double> amplitude_per_hour;
     size_t current_measurment_per_hour = 0;
-    double converse_time = 1000; // Для того, чтобы убрать хранение double в map для нивелирования ошибки вычислений (если ключ double)
-    for(const auto& freq_ampl_hour_part : prognostic_route_)
+    for(size_t current_measurment_per_hour = 0; current_measurment_per_hour < prognostic_route_.size(); ++current_measurment_per_hour)
     {
-        prognostic_data_.time_freq[freq_ampl_hour_part.time_persent * converse_time].push_back(freq_ampl_hour_part.freq_hop_4);
-        if(std::abs(freq_ampl_hour_part.amplitude_3 - 0) > 1e-4)
+        if(std::abs(prognostic_route_[current_measurment_per_hour].amplitude_3 - 0) > 1e-4)
         {
-            amplitude_per_hour.push_back(freq_ampl_hour_part.amplitude_3);
+            amplitude_per_hour.push_back(prognostic_route_[current_measurment_per_hour].amplitude_3);
         }
-        if(current_measurment_per_hour == count_measurments_per_day_prognostic_)
+        if(current_measurment_per_hour % count_measurments_per_day_prognostic_ == 0)
         {
-            current_measurment_per_hour = 0;
+            time_freq_prognostic_result_.emplace_back(TimeFreq{prognostic_route_[current_measurment_per_hour].time_persent, prognostic_route_[current_measurment_per_hour].max_freq_hop}); // Среднее всех частот в часе
             if(!amplitude_per_hour.empty())
             {
                 std::sort(amplitude_per_hour.begin(), amplitude_per_hour.end());
@@ -165,14 +158,31 @@ void Cyprus::SelectionFreqAndAmplitude()
                 }
                 if(!selection_amplitude.empty())
                 {
-                    prognostic_data_.time_amplitude_in_files[freq_ampl_hour_part.time_persent * converse_time] = selection_amplitude;
+                    prognostic_data_.time_amplitude_in_files[prognostic_route_[current_measurment_per_hour].time_persent * converse_time] = selection_amplitude;
                 }
                 amplitude_per_hour.clear();
             }
         }
-        else
-        {
-            ++current_measurment_per_hour;
-        }
     }
 }
+
+void Cyprus::ShowAllFreqsInPoints()
+{
+    std::vector<double> temp_vec_for_sort;
+    std::ofstream out(name_file_all_freq_in_points_);
+    out << "\t[ Time ] \t\t\t\t" << "[ Points freq ]" << std::endl;
+    for(const auto& [time, collection_filtered_mof] : mof_.time_per_sec_and_raw_mof)
+    {
+        temp_vec_for_sort = collection_filtered_mof;
+        std::sort(temp_vec_for_sort.begin(), temp_vec_for_sort.end());
+        out << std::setw(10) << "[ " << Proccess::ChangeMoscowTimeToUtInHours(Proccess::TransformTimeFromSeconds(time, time_window_)) * converse_time / converse_time << " ] ";
+        for(const double elem : temp_vec_for_sort)
+        {
+            out << " " << std::setw(7) << elem;
+        }
+        out << std::endl;
+    }
+}
+
+void Cyprus::SelectionPrognosticModes() {} // Empty this method they not use
+void Cyprus::MergePrognosticFreqAndExperimental() {}

@@ -1,28 +1,27 @@
 #include "alissprings.h"
 
 
-AlisSprings::AlisSprings(uint16_t time_window, const std::string& name_trace_data, const std::string &name_experimental_file, const std::string &name_file_output_experimental_file, size_t step_mhz, double similary, double start_size_window_part_stan_dev, TypeHistogram type, const std::string &name_file_prognistic)
-    : AlgorithmSkeleton(time_window, name_trace_data, name_experimental_file, name_file_output_experimental_file),
+AlisSprings::AlisSprings(uint16_t time_window, const std::string& name_trace_data, const std::string &path_experimental_file, size_t step_mhz, double similary, double start_size_window_part_stan_dev, TypeHistogram type, const std::string &path_file_prognistic)
+    : AlgorithmSkeleton(time_window, name_trace_data, path_experimental_file),
       BuildHistogram(step_mhz, similary, start_size_window_part_stan_dev),
       type_(type),
-      name_file_prognostic_(name_file_prognistic)
+      path_file_prognostic_(path_file_prognistic)
 {}
 
 void AlisSprings::FilterDataMofAndTransformTimeToUt()
 {
     std::vector<double> filtered_mof;
-    double converse_time_for_hours = 1000;
     for(const auto& [time, mof] : mof_.time_per_sec_and_raw_mof)
     {
-        auto key = Proccess::ChangeMoscowTimeToUtInHours(Proccess::TransformTimeFromSeconds(time, time_window_)) * converse_time_for_hours;
-        if(mof.size() > minimum_elements_)
+        auto key = Proccess::ChangeMoscowTimeToUtInHours(Proccess::TransformTimeFromSeconds(time, time_window_)) * converse_time;
+        filtered_mof.clear();
+        filtered_mof.reserve(mof.size());
+        std::copy_if(mof.begin(), mof.end(), std::back_insert_iterator(filtered_mof), [this](double elem)
+                     {
+                         return elem > min_mof_ && elem < max_mof_;
+                     });
+        if(filtered_mof.size() > minimum_elements_)
         {
-            filtered_mof.clear();
-            filtered_mof.reserve(mof.size());
-            std::copy_if(mof.begin(), mof.end(), std::back_insert_iterator(filtered_mof), [this](double elem)
-                         {
-                             return elem > min_mof_ && elem < max_mof_;
-                         });
             mof_.time_per_sec_and_filtered_mof.insert_or_assign(key, std::move(filtered_mof));
         }
         else
@@ -110,7 +109,7 @@ void AlisSprings::ComputeDispersionAndStandartDeviashionMof()
 void AlisSprings::ReadFileModellingMof()
 {
     const char symbol = 'n'; // По умолчанию в dasf файле выводится n, мы её меняем на 0
-    std::ifstream in(name_file_prognostic_, std::ios::in);
+    std::ifstream in(path_file_prognostic_, std::ios::in);
     if(!in.is_open())
     {
         std::cerr << "File not open -> adress readfile -> function Read()" << std::endl;
@@ -141,26 +140,17 @@ void AlisSprings::SelectionFreqAndAmplitude()
 {
     std::vector<double> amplitude_per_hour;
     size_t current_measurment_per_hour = 0;
-    double converse_time = 1000; // Для того, чтобы убрать хранение double в map для нивелирования ошибки вычислений (если ключ double)
+    const size_t count_scanning_hops = 20; // selection freq
     for(const auto& freq_ampl_hour_part : prognostic_route_)
     {
-        const size_t count_scanning_hops = 20; // selection freq
-        double converse_time = 1000;
         const double* first_hop = &freq_ampl_hour_part.freq_hop_1;
-        for(size_t i = 0; i < count_scanning_hops; ++i)
+        for(size_t i = 0; i < count_scanning_hops; ++i, ++first_hop)
         {
             if(*first_hop - 0 > 1e-4)
             {
-                prognostic_time_and_number_hops_freq_.insert_or_assign(elem.time_persent * converse_time, std::map<size_t, double>{{i + 1, *first_hop}});
+                size_t time = freq_ampl_hour_part.time_persent * converse_time;
+                prognostic_data_.time_freq[time].push_back(*first_hop * time_number_hop_count_modes_all_modes_.at(time).number_hop_count[i + 1]/ time_number_hop_count_modes_all_modes_.at(time).all_count_modes); // Почему +1?
             }
-        }
-        if((freq_ampl_hour_part.freq_hop_4 - 0) < 1e-4)
-        {
-            prognostic_data_.time_freq[freq_ampl_hour_part.time_persent * converse_time].push_back(freq_ampl_hour_part.max_freq_hop);
-        }
-        else
-        {
-            prognostic_data_.time_freq[freq_ampl_hour_part.time_persent * converse_time].push_back(freq_ampl_hour_part.freq_hop_4);
         }
         if(std::abs(freq_ampl_hour_part.amplitude_3 - 0) > 1e-4) // selection amplitude
         {
@@ -198,15 +188,31 @@ void AlisSprings::SelectionFreqAndAmplitude()
 void AlisSprings::SelectionPrognosticModes()
 {
     const size_t count_scanning_hops = 20;
-    double converse_time = 1000;
-    for(const auto& elem : prognostic_route_)
+    bool flag_clear = false;
+    for(size_t counter_for_scip_extra_data = 0; counter_for_scip_extra_data < prognostic_route_.size(); ++counter_for_scip_extra_data)
     {
-        const double* first_hop = &elem.freq_hop_1;
-        for(size_t i = 0; i < count_scanning_hops; ++i)
+        if(counter_for_scip_extra_data % count_measurments_per_day_prognostic_ != 0)
+        {
+            continue;
+        }
+        const double* first_hop = &prognostic_route_[counter_for_scip_extra_data].freq_hop_1;
+        for(size_t i = 0; i < count_scanning_hops; ++i, ++first_hop)
         {
             if(*first_hop - 0 > 1e-4)
             {
-                prognostic_time_and_number_hops_freq_.insert_or_assign(elem.time_persent * converse_time, std::map<size_t, double>{{i + 1, *first_hop}});
+                if(flag_clear && *first_hop < prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time][prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time].size() - 2].freq) // here mistake
+                {
+                    flag_clear = false;
+                    prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time].clear();
+                }
+                prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time].emplace_back(HopFreq{(i + 1),*first_hop});
+            }
+            else
+            {
+                if(!prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time].empty())
+                {
+                    flag_clear = true;
+                }
             }
         }
     }
@@ -214,20 +220,98 @@ void AlisSprings::SelectionPrognosticModes()
 
 void AlisSprings::MergePrognosticFreqAndExperimental()
 {
+    std::vector<double> delta_window_between;
+    std::map<size_t, size_t> number_hop_count_modes;
+    size_t all_modes = 0;
+    size_t current_number_hop = 0;
     for(const auto& [time, number_hop_freq] : prognostic_time_and_number_hops_freq_)
     {
-        std::map<size_t, size_t> number_hop_count_modes;
-        for(const double freq_exp : mof_.time_per_sec_and_filtered_mof[time])
+        if(mof_.time_per_sec_and_filtered_mof[time].empty())
         {
-            for(const auto& [number_hop, freq] : number_hop_freq)
+            continue;
+        }
+        for(size_t i = 0; i < number_hop_freq.size() - 1 && number_hop_freq.size() > 1; ++i)
+        {
+            delta_window_between.push_back(std::abs(number_hop_freq[i].freq - number_hop_freq[i + 1].freq));
+        }
+        std::sort(mof_.time_per_sec_and_filtered_mof[time].begin(), mof_.time_per_sec_and_filtered_mof[time].end(), [](double lhs, double rhs)
+        {
+            return rhs > lhs;
+        });
+        double point_start_window = mof_.time_per_sec_and_filtered_mof[time][current_number_hop]; // изначальная позиция для данного временного окна
+        for(size_t i = 0, number_window = 0; i < mof_.time_per_sec_and_filtered_mof[time].size(); ++i)
+        {
+            double current_value_freq = mof_.time_per_sec_and_filtered_mof[time][i];
+            double shift_current_freq_about_delta_window = point_start_window - current_value_freq;
+            double prognostic_delta_between_window = 0;
+            if(number_window >= delta_window_between.size())
             {
-                if(freq_exp > freq)
+                ++number_hop_count_modes[number_hop_freq[++current_number_hop].hop];
+                continue;
+            }
+            else
+            {
+                prognostic_delta_between_window = delta_window_between[number_window];
+            }
+            if(shift_current_freq_about_delta_window < prognostic_delta_between_window)
+            {
+                ++number_hop_count_modes[number_hop_freq[current_number_hop++].hop]; // текущее и смещаем на следующее
+            }
+            else
+            {
+                if(i == number_hop_freq.size() - 1) // Последнее просто добавляем и выходим
                 {
-                    ++number_hop_count_modes[number_hop];
+                    ++number_hop_count_modes[number_hop_freq[++current_number_hop].hop];
+                    ++all_modes;
                     break;
                 }
+                if(shift_current_freq_about_delta_window < delta_window_between[number_window] + delta_window_between[number_window + 1]) // вопрос границ
+                {
+                    point_start_window -= delta_window_between[number_window];
+                    ++number_window;
+                    ++number_hop_count_modes[number_hop_freq[++current_number_hop].hop]; // берем сразу следующее так как она из следующего окна
+                }
+                else
+                {
+                    size_t shift_number_window = 0;
+                    double sum_shift_delta_window = 0;
+                    for(size_t i = number_window; i < delta_window_between.size(); ++i, ++current_number_hop)
+                    {
+                        sum_shift_delta_window += delta_window_between[i];
+                        if(sum_shift_delta_window > shift_current_freq_about_delta_window)
+                        {
+                            sum_shift_delta_window -= delta_window_between[i];
+                            point_start_window -= sum_shift_delta_window;
+                            ++number_hop_count_modes[number_hop_freq[--current_number_hop].hop];
+                            number_window = i - 1; // здесь проблемы нет по поводу границ изначально уже будет на 1 больше исходя из предыдущего условия
+                            break;
+                        }
+                    }
+                }
             }
+        ++all_modes;
         }
-        time_number_hop_count_modes_.insert_or_assign(time, number_hop_count_modes);
+        current_number_hop = 0;
+        all_modes = 0;
+        time_number_hop_count_modes_all_modes_.insert_or_assign(time, PrognosticModes{std::move(number_hop_count_modes), all_modes});
+        number_hop_count_modes.clear();
+    }
+}
+
+void AlisSprings::ShowAllFreqsInPoints()
+{
+    std::vector<double> temp_vec_for_sort;
+    std::ofstream out(name_file_all_freq_in_points_);
+    out << "\t[ Time ] \t\t\t\t" << "[ Points freq ]" << std::endl;
+    for(const auto& [time, collection_filtered_mof] : mof_.time_per_sec_and_raw_mof)
+    {
+        temp_vec_for_sort = collection_filtered_mof;
+        std::sort(temp_vec_for_sort.begin(), temp_vec_for_sort.end());
+        out << std::setw(10) << "[ " << Proccess::ChangeMoscowTimeToUtInHours(Proccess::TransformTimeFromSeconds(time, time_window_)) * converse_time / converse_time << " ] ";
+        for(const double elem : temp_vec_for_sort)
+        {
+            out << " " << std::setw(9) << elem;
+        }
+        out << std::endl;
     }
 }

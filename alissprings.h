@@ -23,7 +23,7 @@ private:
     static constexpr size_t min_mof_ = 8'000;
     static constexpr size_t max_mof_ = 50'000;
     static constexpr size_t minimum_elements_ = 7;
-    static constexpr size_t count_measurments_per_day_prognostic_ = 4;
+    static constexpr size_t count_measurments_per_day_prognostic_ = 5;
     static constexpr size_t delta_amplitude_between_modes_ = 30;
     std::deque<FormatFilePrognosticRadioRouteAustralia> prognostic_route_;
     std::map<size_t, std::vector<HopFreq>> prognostic_time_and_number_hops_freq_;

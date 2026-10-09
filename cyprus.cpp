@@ -125,7 +125,7 @@ void Cyprus::ReadFileModellingMof()
         FormatFilePrognosticRadioRouteCyprus temp;
         std::istringstream iss(line);
         iss >> temp.time >> temp.time_persent >> temp.freq_persent_mof >> temp.amplitude_1 >> temp.amplitude_2 >> temp.amplitude_3 >> temp.amplitude_4 >> temp.amplitude_5 >> temp.amplitude_6;
-        iss >> temp.freq >> temp.unknow_time >> temp.count_hops;
+        iss >> temp.distance >> temp.unknow_time >> temp.count_hops;
         iss >>  temp.freq_hop_1 >> temp.freq_hop_2 >> temp.freq_hop_3 >> temp.freq_hop_4 >> temp.max_freq_hop >> temp.freq_hop_5 >> temp.freq_hop_6 >> temp.unknow_data;
         prognostic_route_.emplace_back(temp);
     }

@@ -26,7 +26,7 @@ struct FormatFilePrognosticRadioRouteAustralia
     double amplitude_4;
     double amplitude_5;
     double amplitude_6;
-    double freq;
+    double distance;
     double unknow_time;
     size_t count_hops;
     double freq_hop_1;
@@ -66,7 +66,7 @@ struct FormatFilePrognosticRadioRouteCyprus
     double amplitude_4;
     double amplitude_5;
     double amplitude_6;
-    double freq;
+    double distance;
     double unknow_time;
     size_t count_hops;
     double freq_hop_1;

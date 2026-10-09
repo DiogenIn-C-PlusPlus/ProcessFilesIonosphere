@@ -127,7 +127,7 @@ void AlisSprings::ReadFileModellingMof()
         FormatFilePrognosticRadioRouteAustralia temp;
         std::istringstream iss(line);
         iss >> temp.time >> temp.time_persent >> temp.freq_persent_mof >> temp.amplitude_1 >> temp.amplitude_2 >> temp.amplitude_3 >> temp.amplitude_4 >> temp.amplitude_5 >> temp.amplitude_6;
-        iss >> temp.freq >> temp.unknow_time >> temp.count_hops;
+        iss >> temp.distance >> temp.unknow_time >> temp.count_hops;
         iss >>  temp.freq_hop_1 >> temp.freq_hop_2 >> temp.freq_hop_3 >> temp.freq_hop_4;
         iss >> temp.freq_hop_5 >> temp.freq_hop_6 >> temp.freq_hop_7 >> temp.freq_hop_8 >> temp.freq_hop_9;
         iss >> temp.freq_hop_10 >> temp.freq_hop_11 >> temp.freq_hop_12 >> temp.freq_hop_13 >> temp.freq_hop_14 >> temp.freq_hop_15 >> temp.freq_hop_16 >> temp.freq_hop_17 >> temp.freq_hop_18;
@@ -185,9 +185,86 @@ void AlisSprings::SelectionFreqAndAmplitude()
     }
 }
 
+static std::ostream& operator<<(std::ostream& os,
+                                const FormatFilePrognosticRadioRouteAustralia& d)
+{
+    os << d.time              << ' '
+       << d.time_persent      << ' '
+       << d.freq_persent_mof  << ' '
+       << d.amplitude_1       << ' '
+       << d.amplitude_2       << ' '
+       << d.amplitude_3       << ' '
+       << d.amplitude_4       << ' '
+       << d.amplitude_5       << ' '
+       << d.amplitude_6       << ' '
+       << d.distance          << ' '
+       << d.unknow_time       << ' '
+       << d.count_hops        << ' '
+       << d.freq_hop_1        << ' '
+       << d.freq_hop_2        << ' '
+       << d.freq_hop_3        << ' '
+       << d.freq_hop_4        << ' '
+       << d.freq_hop_5        << ' '
+       << d.freq_hop_6        << ' '
+       << d.freq_hop_7        << ' '
+       << d.freq_hop_8        << ' '
+       << d.freq_hop_9        << ' '
+       << d.freq_hop_10       << ' '
+       << d.freq_hop_11       << ' '
+       << d.freq_hop_12       << ' '
+       << d.freq_hop_13       << ' '
+       << d.freq_hop_14       << ' '
+       << d.freq_hop_15       << ' '
+       << d.freq_hop_16       << ' '
+       << d.freq_hop_17       << ' '
+       << d.freq_hop_18       << ' '
+       << d.freq_hop_19       << ' '
+       << d.freq_hop_20       << ' '
+       << d.max_freq_hop      << ' '
+       << d.freq_hop_22       << ' '
+       << d.freq_hop_23       << ' '
+       << d.unknow_data;
+    return os;
+}
+
+// Основная функция записи в файл
+bool WritePrognosticRadioRouteAustralia(
+        const std::string& filename,
+        const std::deque<FormatFilePrognosticRadioRouteAustralia>& prognostic_route_,
+        bool append = false,
+        char delimiter = '\n')
+{
+    std::ios::openmode mode = std::ios::out;
+    if (append)
+        mode |= std::ios::app;
+
+    std::ofstream fout(filename, mode);
+    if (!fout.is_open())
+        return false;
+
+    // Заголовок (можно убрать, если не нужен)
+    fout << "time time_persent freq_persent_mof "
+            "amplitude_1 amplitude_2 amplitude_3 amplitude_4 amplitude_5 amplitude_6 "
+            "distance unknow_time count_hops "
+            "freq_hop_1 freq_hop_2 freq_hop_3 freq_hop_4 freq_hop_5 "
+            "freq_hop_6 freq_hop_7 freq_hop_8 freq_hop_9 freq_hop_10 "
+            "freq_hop_11 freq_hop_12 freq_hop_13 freq_hop_14 freq_hop_15 "
+            "freq_hop_16 freq_hop_17 freq_hop_18 freq_hop_19 freq_hop_20 "
+            "max_freq_hop freq_hop_22 freq_hop_23 unknow_data\n";
+
+    for (const auto& rec : prognostic_route_)
+    {
+        fout << rec << delimiter;
+    }
+
+    fout.close();
+    return true;
+}
+
 void AlisSprings::SelectionPrognosticModes()
 {
-    const size_t count_scanning_hops = 20;
+    constexpr size_t count_scanning_hops = 20;
+    constexpr double delta_mhz_between_modes = 5;
     bool flag_clear = false;
     for(size_t counter_for_scip_extra_data = 0; counter_for_scip_extra_data < prognostic_route_.size(); ++counter_for_scip_extra_data)
     {
@@ -200,10 +277,18 @@ void AlisSprings::SelectionPrognosticModes()
         {
             if(*first_hop - 0 > 1e-4)
             {
-                if(flag_clear && *first_hop < prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time][prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time].size() - 2].freq) // here mistake
+                if(prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time].size() > 1 && std::abs((*first_hop - prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time][prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time].size() - 2].freq)) < 1e-3) // Случай для одинаковых частот подряд
+                {
+                    continue;
+                }
+                if(flag_clear && *first_hop < prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time][prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time].size() - 2].freq) // here mistake случай, когда идут частоты, потом n
                 {
                     flag_clear = false;
                     prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time].clear();
+                }
+                if(prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time].size() > 1 && std::abs((prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time][prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time].size() - 2].freq) - *first_hop) > delta_mhz_between_modes) // Случай, когда частоты вначале битые (гораздо меньше последующих)
+                {
+                    continue;
                 }
                 prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time].emplace_back(HopFreq{(i + 1),*first_hop});
             }

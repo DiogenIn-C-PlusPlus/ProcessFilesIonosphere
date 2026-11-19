@@ -8,36 +8,21 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(spdlog CONFIG REQUIRED)
 find_package(GTest REQUIRED)
 
-add_executable(Proc_Files_Ionosphere
-    main.cpp
-    proccess.cpp proccess.h
-    buildhistogram.h buildhistogram.cpp
-    formatfiles.h
-    tests.h tests.cpp
-    additional.h additional.cpp
-    cyprus.h cyprus.cpp
-    alissprings.h alissprings.cpp
-    algorithmskeleton.h algorithmskeleton.cpp
-    measumentfactory.h measumentfactory.cpp
-    magic_enum.hpp
+add_library(core STATIC
+    src/proccess.cpp src/buildhistogram.cpp src/additional.cpp
+    src/cyprus.cpp src/alissprings.cpp src/algorithmskeleton.cpp src/measumentfactory.cpp
 )
 
-target_link_libraries(Proc_Files_Ionosphere PRIVATE spdlog::spdlog_header_only)
+target_include_directories(core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(core PUBLIC spdlog::spdlog_header_only)
 
-add_executable(my_tests
-    tests.cpp
-    additional.cpp
-    proccess.cpp
-    buildhistogram.cpp
-    cyprus.cpp
-    alissprings.cpp
-    algorithmskeleton.cpp
-)
+add_executable(Proc_Files_Ionosphere app/main.cpp)
+target_link_libraries(Proc_Files_Ionosphere PRIVATE core)
 
-target_link_libraries(my_tests PRIVATE
-    GTest::gtest_main
-    spdlog::spdlog_header_only
-)
+
+add_executable(my_tests tests/tests.cpp)
+target_link_libraries(my_tests PRIVATE core GTest::gtest_main)
 
 enable_testing()
 include(GoogleTest)

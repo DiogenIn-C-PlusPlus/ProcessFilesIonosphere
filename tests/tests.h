@@ -5,8 +5,6 @@
 #include <string>
 
 #include "proccess.h"
-#include "readfile.h"
-#include "outputfile.h"
 #include "buildhistogram.h"
 
 class Tests
@@ -29,6 +27,7 @@ private:
     void TestCalculateCountDataInWindowTime();
     void TestTransformTimeFromSeconds();
     void TestHistogram();
+    void TestMergePrognosticFreqAndExperimental();
 };
 
 

@@ -20,7 +20,8 @@ void Tests::AllTests()
 //    TestReadMof();
 //    TestCalculateCountDataInWindowTime();
     //    TestTransformTimeFromSeconds();
-    TestHistogram();
+//    TestHistogram();
+ //   TestMergePrognosticFreqAndExperimental();
 }
 
 void Tests::TestHistogram()
@@ -174,6 +175,91 @@ void Tests::TestHistogram()
 
     std::cout << "=== End TestHistogram ===" << std::endl << std::endl;
 }
+
+//void Tests::TestMergePrognosticFreqAndExperimental()
+//{
+//    std::vector<double> filtered_mof =
+//    {
+//        10234, 11567, 12450, 13890, 14567,
+//        15890, 16234, 17456, 18345, 19012,
+//        20123, 21456, 22345, 23123, 24567,
+//        25432, 26123, 27345, 28456, 29123,
+//        30234, 31234, 32145, 33012, 34123,
+//        10987, 12987, 14987, 16987, 18987,
+//        20987, 22987, 24987, 26987, 28987,
+//        30987, 32987, 33987, 34765, 34999
+//    };
+
+
+
+//    std::vector<double> delta_window_between;
+//    std::map<size_t, size_t> number_hop_count_modes;
+//    size_t all_modes = 0;
+//    size_t current_number_hop = 0;
+//    for(const auto& [time, number_hop_freq] : prognostic_time_and_number_hops_freq_)
+//    {
+//        for(size_t i = 1;  i < number_hop_freq.size(); ++i)
+//        {
+//            delta_window_between.push_back(std::abs(number_hop_freq[i - 1].freq - number_hop_freq[i].freq));
+//        }
+//        std::sort(filtered_mof.begin(), filtered_mof.end(), [](double lhs, double rhs)
+//        {
+//            return rhs < lhs;
+//        });
+//        double point_start_window = filtered_mof[current_number_hop]; // изначальная позиция для данного временного окна
+//        for(size_t i = 0, number_window = 0; i < filtered_mof.size(); ++i)
+//        {
+//            double current_value_freq = filtered_mof[i];
+//            double shift_current_freq_about_delta_window = point_start_window - current_value_freq;
+//            double prognostic_delta_between_window = 0;
+//            if(number_window >= delta_window_between.size())
+//            {
+//                ++number_hop_count_modes[number_hop_freq[++current_number_hop].hop];
+//                continue;
+//            }
+//            else
+//            {
+//                prognostic_delta_between_window = delta_window_between[number_window];
+//            }
+//            if(shift_current_freq_about_delta_window < prognostic_delta_between_window)
+//            {
+//                ++number_hop_count_modes[number_hop_freq[current_number_hop++].hop]; // текущее и смещаем на следующее
+//            }
+//            else
+//            {
+//                if(i == number_hop_freq.size() - 1) // Последнее просто добавляем и выходим проверка на пустоту выше находится
+//                {
+//                    ++number_hop_count_modes[number_hop_freq[++current_number_hop].hop];
+//                    ++all_modes;
+//                    break;
+//                }
+//                if(shift_current_freq_about_delta_window < delta_window_between[number_window] + delta_window_between[number_window + 1]) // вопрос границ
+//                {
+//                    point_start_window -= delta_window_between[number_window];
+//                    ++number_window;
+//                    ++number_hop_count_modes[number_hop_freq[++current_number_hop].hop]; // берем сразу следующее так как она из следующего окна
+//                }
+//                else
+//                {
+//                    double sum_shift_delta_window = 0;
+//                    for(size_t i = number_window; i < delta_window_between.size(); ++i, ++current_number_hop)
+//                    {
+//                        sum_shift_delta_window += delta_window_between[i];
+//                        if(sum_shift_delta_window > shift_current_freq_about_delta_window)
+//                        {
+//                            sum_shift_delta_window -= delta_window_between[i];
+//                            point_start_window -= sum_shift_delta_window;
+//                            ++number_hop_count_modes[number_hop_freq[--current_number_hop].hop]; // Не понятно почему нужен --, мб просто без него
+//                            number_window = i - 1; // здесь проблемы нет по поводу границ изначально уже будет на 1 больше исходя из предыдущего условия
+//                            break;
+//                        }
+//                    }
+//                }
+//            }
+//        ++all_modes;
+//        }
+//    }
+//}
 /*
 void Tests::TestMiddleValue()
 {

@@ -1,7 +1,6 @@
 #include <regex>
 
 #include "measumentfactory.h"
-#include "tests.h"
 
 #include "magic_enum.hpp"
 
@@ -114,8 +113,6 @@ int main()
 //   SolveExperementalCyprus(TypeHistogram::Every, 0.4, 10);
 //    SolvePrognosticCyprus();
    // SolveExperementalCyprus(TypeHistogram::Max, 0.4, 10);
-    Tests tests;
-    tests.AllTests();
     // SolvePrognosticAlis();
 
     // SolveExperementalAlis(TypeHistogram::Probility);

@@ -185,8 +185,7 @@ void AlisSprings::SelectionFreqAndAmplitude()
     }
 }
 
-static std::ostream& operator<<(std::ostream& os,
-                                const FormatFilePrognosticRadioRouteAustralia& d)
+static std::ostream& operator<<(std::ostream& os, const FormatFilePrognosticRadioRouteAustralia& d)
 {
     os << d.time              << ' '
        << d.time_persent      << ' '
@@ -277,7 +276,8 @@ void AlisSprings::SelectionPrognosticModes()
         {
             if(*first_hop - 0 > 1e-4)
             {
-                if(prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time].size() > 1 && std::abs((*first_hop - prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time][prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time].size() - 2].freq)) < 1e-3) // Случай для одинаковых частот подряд
+                if(prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time].size() > 1
+                        && std::abs((*first_hop - prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time][prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time].size() - 2].freq)) < 1e-3) // Случай для одинаковых частот подряд
                 {
                     continue;
                 }
@@ -286,7 +286,8 @@ void AlisSprings::SelectionPrognosticModes()
                     flag_clear = false;
                     prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time].clear();
                 }
-                if(prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time].size() > 1 && std::abs((prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time][prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time].size() - 2].freq) - *first_hop) > delta_mhz_between_modes) // Случай, когда частоты вначале битые (гораздо меньше последующих)
+                if(prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time].size() > 1
+                        && std::abs((prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time][prognostic_time_and_number_hops_freq_[prognostic_route_[counter_for_scip_extra_data].time_persent * converse_time].size() - 2].freq) - *first_hop) > delta_mhz_between_modes) // Случай, когда частоты вначале битые (гораздо меньше последующих)
                 {
                     continue;
                 }
@@ -311,17 +312,17 @@ void AlisSprings::MergePrognosticFreqAndExperimental()
     size_t current_number_hop = 0;
     for(const auto& [time, number_hop_freq] : prognostic_time_and_number_hops_freq_)
     {
-        if(mof_.time_per_sec_and_filtered_mof[time].empty())
+        if(auto check_value = mof_.time_per_sec_and_filtered_mof.find(time); check_value == mof_.time_per_sec_and_filtered_mof.end() || check_value->second.empty() || number_hop_freq.empty())
         {
             continue;
         }
-        for(size_t i = 0; i < number_hop_freq.size() - 1 && number_hop_freq.size() > 1; ++i)
+        for(size_t i = 1;  i < number_hop_freq.size(); ++i)
         {
-            delta_window_between.push_back(std::abs(number_hop_freq[i].freq - number_hop_freq[i + 1].freq));
+            delta_window_between.push_back(std::abs(number_hop_freq[i - 1].freq - number_hop_freq[i].freq));
         }
         std::sort(mof_.time_per_sec_and_filtered_mof[time].begin(), mof_.time_per_sec_and_filtered_mof[time].end(), [](double lhs, double rhs)
         {
-            return rhs > lhs;
+            return rhs < lhs;
         });
         double point_start_window = mof_.time_per_sec_and_filtered_mof[time][current_number_hop]; // изначальная позиция для данного временного окна
         for(size_t i = 0, number_window = 0; i < mof_.time_per_sec_and_filtered_mof[time].size(); ++i)
@@ -329,7 +330,7 @@ void AlisSprings::MergePrognosticFreqAndExperimental()
             double current_value_freq = mof_.time_per_sec_and_filtered_mof[time][i];
             double shift_current_freq_about_delta_window = point_start_window - current_value_freq;
             double prognostic_delta_between_window = 0;
-            if(number_window >= delta_window_between.size())
+            if(number_window >= delta_window_between.size()) // добавляем оставшиеся моды
             {
                 ++number_hop_count_modes[number_hop_freq[++current_number_hop].hop];
                 continue;
@@ -344,7 +345,7 @@ void AlisSprings::MergePrognosticFreqAndExperimental()
             }
             else
             {
-                if(i == number_hop_freq.size() - 1) // Последнее просто добавляем и выходим
+                if(i == number_hop_freq.size() - 1) // Последнее просто добавляем и выходим проверка на пустоту выше находится
                 {
                     ++number_hop_count_modes[number_hop_freq[++current_number_hop].hop];
                     ++all_modes;
@@ -358,7 +359,6 @@ void AlisSprings::MergePrognosticFreqAndExperimental()
                 }
                 else
                 {
-                    size_t shift_number_window = 0;
                     double sum_shift_delta_window = 0;
                     for(size_t i = number_window; i < delta_window_between.size(); ++i, ++current_number_hop)
                     {
@@ -367,7 +367,7 @@ void AlisSprings::MergePrognosticFreqAndExperimental()
                         {
                             sum_shift_delta_window -= delta_window_between[i];
                             point_start_window -= sum_shift_delta_window;
-                            ++number_hop_count_modes[number_hop_freq[--current_number_hop].hop];
+                            ++number_hop_count_modes[number_hop_freq[--current_number_hop].hop]; // Наерно нужен --, чтобы откатить как с дельтой окна
                             number_window = i - 1; // здесь проблемы нет по поводу границ изначально уже будет на 1 больше исходя из предыдущего условия
                             break;
                         }

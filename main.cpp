@@ -108,12 +108,17 @@ void SolveExperementalCyprus(TypeHistogram type_hist, double similary = 0, doubl
 
 int main()
 {
+ //   auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>("logs/proc_iono.log", 1024 * 1024 * 3, 3);
+
     //SolveExperementalCyprus(TypeHistogram::Probility);
 //   SolveExperementalCyprus(TypeHistogram::Every, 0.4, 10);
 //    SolvePrognosticCyprus();
    // SolveExperementalCyprus(TypeHistogram::Max, 0.4, 10);
-    SolvePrognosticAlis();
-   // SolveExperementalAlis(TypeHistogram::Probility);
+    Tests tests;
+    tests.AllTests();
+    // SolvePrognosticAlis();
+
+    // SolveExperementalAlis(TypeHistogram::Probility);
 
     return 0;
 }

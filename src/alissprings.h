@@ -3,7 +3,7 @@
 #include "algorithmskeleton.h"
 #include "buildhistogram.h"
 
-class AlisSprings final : public AlgorithmSkeleton, public BuildHistogram
+class AlisSprings final : public AlgorithmSkeleton
 {
 public:
     AlisSprings() = delete;
@@ -25,6 +25,9 @@ private:
     static constexpr size_t minimum_elements_ = 7;
     static constexpr size_t count_measurments_per_day_prognostic_ = 5;
     static constexpr size_t delta_amplitude_between_modes_ = 30;
+    size_t step_mhz_;
+    double similaty_;
+    size_t start_size_window_part_stan_dev_;
     std::deque<FormatFilePrognosticRadioRouteAustralia> prognostic_route_;
     std::map<size_t, std::vector<HopFreq>> prognostic_time_and_number_hops_freq_;
     std::map<size_t, PrognosticModes> time_number_hop_count_modes_all_modes_;

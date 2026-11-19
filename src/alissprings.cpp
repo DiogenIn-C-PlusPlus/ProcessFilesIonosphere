@@ -3,7 +3,9 @@
 
 AlisSprings::AlisSprings(uint16_t time_window, const std::string& name_trace_data, const std::string &path_experimental_file, size_t step_mhz, double similary, double start_size_window_part_stan_dev, TypeHistogram type, const std::string &path_file_prognistic)
     : AlgorithmSkeleton(time_window, name_trace_data, path_experimental_file),
-      BuildHistogram(step_mhz, similary, start_size_window_part_stan_dev),
+      step_mhz_(step_mhz),
+      similaty_(similary),
+      start_size_window_part_stan_dev_(start_size_window_part_stan_dev),
       type_(type),
       path_file_prognostic_(path_file_prognistic)
 {}
@@ -11,9 +13,10 @@ AlisSprings::AlisSprings(uint16_t time_window, const std::string& name_trace_dat
 void AlisSprings::FilterDataMofAndTransformTimeToUt()
 {
     std::vector<double> filtered_mof;
+    Proccess proc;
     for(const auto& [time, mof] : mof_.time_per_sec_and_raw_mof)
     {
-        auto key = Proccess::ChangeMoscowTimeToUtInHours(Proccess::TransformTimeFromSeconds(time, time_window_)) * converse_time;
+        auto key = proc.ChangeMoscowTimeToUtInHours(proc.TransformTimeFromSeconds(time, time_window_)) * converse_time;
         filtered_mof.clear();
         filtered_mof.reserve(mof.size());
         std::copy_if(mof.begin(), mof.end(), std::back_insert_iterator(filtered_mof), [this](double elem)
@@ -33,13 +36,14 @@ void AlisSprings::FilterDataMofAndTransformTimeToUt()
 
 void AlisSprings::SelectionDataHistogram()
 {
+    BuildHistogram hist(step_mhz_, similaty_, start_size_window_part_stan_dev_);
     switch (type_)
     {
         case TypeHistogram::Max:
         {
             for(const auto& [time, collection_mof] : mof_.time_per_sec_and_filtered_mof)
             {
-                mof_.time_per_sec_and_selection_hist_mof[time] = BuildHistogram::HistogramMaxWindow(collection_mof);
+                mof_.time_per_sec_and_selection_hist_mof[time] = hist.HistogramMaxWindow(collection_mof);
             }
             break;
         }
@@ -47,7 +51,7 @@ void AlisSprings::SelectionDataHistogram()
         {
             for(const auto& [time, collection_mof] : mof_.time_per_sec_and_filtered_mof)
             {
-                mof_.time_per_sec_and_selection_hist_mof[time] = BuildHistogram::HistogramProbilityWindow(collection_mof);
+                mof_.time_per_sec_and_selection_hist_mof[time] = hist.HistogramProbilityWindow(collection_mof);
             }
             break;
         }
@@ -55,7 +59,7 @@ void AlisSprings::SelectionDataHistogram()
         {
             for(const auto& [time, collection_mof] : mof_.time_per_sec_and_filtered_mof)
             {
-                mof_.time_per_sec_and_selection_hist_mof[time] = BuildHistogram::HistogramEveryWindow(collection_mof);
+                mof_.time_per_sec_and_selection_hist_mof[time] = hist.HistogramEveryWindow(collection_mof);
             }
             break;
         }
@@ -82,9 +86,10 @@ void AlisSprings::ComputeMiddleMof()
             [[fallthrough]];
         case TypeHistogram::Max:
         {
+            Proccess proc;
             for(const auto& [time, collection_after_hist_mof] : mof_.time_per_sec_and_selection_hist_mof)
             {
-                mof_.time_and_middle_mof[time] = Proccess::MiddleValue(collection_after_hist_mof);
+                mof_.time_and_middle_mof[time] = proc.MiddleValue(collection_after_hist_mof);
             }
             break;
         }
@@ -97,12 +102,13 @@ void AlisSprings::ComputeMiddleMof()
 
 void AlisSprings::ComputeDispersionAndStandartDeviashionMof()
 {
+    Proccess proc;
     for(const auto& [time, filtered_collection] : mof_.time_per_sec_and_filtered_mof)
     {
         double middle_value = mof_.time_and_middle_mof[time];
-        double dispersion_value = Proccess::ComputeDispersion(filtered_collection, middle_value);
+        double dispersion_value = proc.ComputeDispersion(filtered_collection, middle_value);
         mof_.time_and_dispersion[time] = dispersion_value;
-        mof_.time_and_standart_deviashion[time] = Proccess::ComputeStandartDeviation(dispersion_value);
+        mof_.time_and_standart_deviashion[time] = proc.ComputeStandartDeviation(dispersion_value);
     }
 }
 
@@ -385,6 +391,7 @@ void AlisSprings::MergePrognosticFreqAndExperimental()
 
 void AlisSprings::ShowAllFreqsInPoints()
 {
+    Proccess proc;
     std::vector<double> temp_vec_for_sort;
     std::ofstream out(name_file_all_freq_in_points_);
     out << "\t[ Time ] \t\t\t\t" << "[ Points freq ]" << std::endl;
@@ -392,7 +399,7 @@ void AlisSprings::ShowAllFreqsInPoints()
     {
         temp_vec_for_sort = collection_filtered_mof;
         std::sort(temp_vec_for_sort.begin(), temp_vec_for_sort.end());
-        out << std::setw(10) << "[ " << Proccess::ChangeMoscowTimeToUtInHours(Proccess::TransformTimeFromSeconds(time, time_window_)) * converse_time / converse_time << " ] ";
+        out << std::setw(10) << "[ " << proc.ChangeMoscowTimeToUtInHours(proc.TransformTimeFromSeconds(time, time_window_)) * converse_time / converse_time << " ] ";
         for(const double elem : temp_vec_for_sort)
         {
             out << " " << std::setw(9) << elem;

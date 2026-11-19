@@ -21,7 +21,7 @@ struct Histogram
     std::vector<double> collection_for_window;
 };
 
-class BuildHistogram : public Proccess
+class BuildHistogram final
 {
 public:
     BuildHistogram() = delete;
@@ -47,6 +47,7 @@ std::vector<double> BuildHistogram::HistogramEveryWindow(const std::vector<T>& v
     {
         return {};
     }
+    Proccess proc;
     std::vector<double> result;
     size_t similarity_current = 0; // Схожесть
     size_t similarity_need = vec.size() * similary_;
@@ -55,7 +56,7 @@ std::vector<double> BuildHistogram::HistogramEveryWindow(const std::vector<T>& v
     {
         std::vector<Histogram> histogram;
         auto min_max = std::minmax_element(vec.begin(), vec.end());
-        double stan_dev = (coeff_increase_window_freq / start_size_window_part_stan_dev_) * Proccess::ComputeStandartDeviation(Proccess::ComputeDispersion(vec, Proccess::MiddleValue(vec)));
+        double stan_dev = (coeff_increase_window_freq / start_size_window_part_stan_dev_) * proc.ComputeStandartDeviation(proc.ComputeDispersion(vec, proc.MiddleValue(vec)));
         double end_histog = *min_max.second;
         for(double start_histog = *min_max.first - stan_dev / 2; start_histog < end_histog; start_histog += stan_dev)
         {
@@ -95,13 +96,14 @@ std::vector<double> BuildHistogram::HistogramMaxWindow(const std::vector<T>& vec
     {
         return {};
     }
+    Proccess proc;
     std::vector<double> result;
     size_t similarity_current = 0; // Схожесть
     size_t similarity_need = vec.size() * similary_;
     double coeff_increase_window_freq = 1;
     std::vector<Histogram> histogram;
     auto min_max = std::minmax_element(vec.begin(), vec.end());
-    double stan_dev = (coeff_increase_window_freq / start_size_window_part_stan_dev_) * Proccess::ComputeStandartDeviation(Proccess::ComputeDispersion(vec, Proccess::MiddleValue(vec)));
+    double stan_dev = (coeff_increase_window_freq / start_size_window_part_stan_dev_) * proc.ComputeStandartDeviation(proc.ComputeDispersion(vec, proc.MiddleValue(vec)));
     double end_histog = *min_max.second;
     for(double start_histog = *min_max.first - stan_dev / 2; start_histog < end_histog; start_histog += stan_dev)
     {
@@ -155,6 +157,7 @@ std::vector<double> BuildHistogram::HistogramProbilityWindow(const std::vector<T
     {
         return {};
     }
+    Proccess proc;
     std::vector<double> result;
     size_t count_elemets_time_window = vec.size();
     std::vector<Histogram> histogram;
@@ -182,7 +185,7 @@ std::vector<double> BuildHistogram::HistogramProbilityWindow(const std::vector<T
             continue;
         }
         double probility_coeff = elem.collection_for_window.size() / static_cast<double>(count_elemets_time_window); // time window - это кол-во эл-тов всех во временном окне (все для данного набора частот)
-        result.push_back(Proccess::MiddleValue(elem.collection_for_window) * probility_coeff);
+        result.push_back(proc.MiddleValue(elem.collection_for_window) * probility_coeff);
     }
     return result;
 }

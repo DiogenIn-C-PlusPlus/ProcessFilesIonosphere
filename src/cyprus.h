@@ -5,7 +5,7 @@
 #include "algorithmskeleton.h"
 #include "buildhistogram.h"
 
-class Cyprus  final : public AlgorithmSkeleton, public BuildHistogram
+class Cyprus  final : public AlgorithmSkeleton
 {
 public:
     Cyprus() = delete;
@@ -26,6 +26,9 @@ private:
     static constexpr size_t max_mof_ = 40'000;
     static constexpr size_t minimum_elements_ = 15;
     static constexpr size_t delta_amplitude_between_modes_ = 30;
+    size_t step_mhz_;
+    double similary_;
+    size_t start_size_window_part_stan_dev_;
     std::deque<FormatFilePrognosticRadioRouteCyprus> prognostic_route_;
     TypeHistogram type_;
     std::string path_file_prognostic_;

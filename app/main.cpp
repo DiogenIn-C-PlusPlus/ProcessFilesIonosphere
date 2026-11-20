@@ -113,7 +113,7 @@ int main()
 //   SolveExperementalCyprus(TypeHistogram::Every, 0.4, 10);
 //    SolvePrognosticCyprus();
    // SolveExperementalCyprus(TypeHistogram::Max, 0.4, 10);
-    // SolvePrognosticAlis();
+   SolvePrognosticAlis();
 
     // SolveExperementalAlis(TypeHistogram::Probility);
 

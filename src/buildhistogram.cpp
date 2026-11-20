@@ -6,3 +6,9 @@ BuildHistogram::BuildHistogram(size_t step_mhz, double similary, double start_si
       similary_(similary),
       start_size_window_part_stan_dev_(start_size_window_part_stan_dev)
 {}
+
+BuildHistogram::BuildHistogram(size_t step_mhz) // For probility historgamm
+    : step_mhz_(step_mhz),
+      similary_(0),
+      start_size_window_part_stan_dev_(0)
+{}

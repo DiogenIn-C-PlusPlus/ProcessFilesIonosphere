@@ -25,6 +25,7 @@ class BuildHistogram final
 {
 public:
     BuildHistogram() = delete;
+    explicit BuildHistogram(size_t step_mhz);
     explicit BuildHistogram(size_t step_mhz, double similary, double start_size_window_part_stan_dev);
     template <typename T>
     std::vector<double> HistogramMaxWindow(const std::vector<T>& vec);
@@ -51,6 +52,7 @@ std::vector<double> BuildHistogram::HistogramEveryWindow(const std::vector<T>& v
     std::vector<double> result;
     size_t similarity_current = 0; // Схожесть
     size_t similarity_need = vec.size() * similary_;
+    result.reserve(similarity_need);
     double coeff_increase_window_freq = 1;
     do
     {
@@ -83,7 +85,7 @@ std::vector<double> BuildHistogram::HistogramEveryWindow(const std::vector<T>& v
         }
         similarity_current = max_elem->collection_for_window.size();
         ++coeff_increase_window_freq;
-        result = max_elem->collection_for_window;
+        result = std::move(max_elem->collection_for_window);
     } while (similarity_current < similarity_need);
     return result;
 }
@@ -100,6 +102,7 @@ std::vector<double> BuildHistogram::HistogramMaxWindow(const std::vector<T>& vec
     std::vector<double> result;
     size_t similarity_current = 0; // Схожесть
     size_t similarity_need = vec.size() * similary_;
+    result.reserve(similarity_need);
     double coeff_increase_window_freq = 1;
     std::vector<Histogram> histogram;
     auto min_max = std::minmax_element(vec.begin(), vec.end());
@@ -131,20 +134,19 @@ std::vector<double> BuildHistogram::HistogramMaxWindow(const std::vector<T>& vec
      double freq_with_max_count_window = max_elem->freq_window;
      do
      {
+        result.clear();
         double step_increase_window = stan_dev * coeff_increase_window_freq/ 10.1;
         double left_border = freq_with_max_count_window - step_increase_window;
         double right_border = freq_with_max_count_window + step_increase_window;
-        std::vector<double> count_freqs_in_window;
         for(const auto freq : vec)
         {
             if(freq > left_border && freq < right_border)
             {
-                count_freqs_in_window.emplace_back(freq);
+                result.emplace_back(freq);
             }
         }
-        similarity_current = count_freqs_in_window.size();
+        similarity_current = result.size();
         ++coeff_increase_window_freq;
-        result = count_freqs_in_window;
      } while (similarity_current < similarity_need);
     return result;
 }
@@ -162,6 +164,7 @@ std::vector<double> BuildHistogram::HistogramProbilityWindow(const std::vector<T
     size_t count_elemets_time_window = vec.size();
     std::vector<Histogram> histogram;
     auto min_max = std::minmax_element(vec.begin(), vec.end());
+    result.reserve(count_elemets_time_window * 0.6);
     double end_histog = *min_max.second;
     for(double start_histog = *min_max.first - step_mhz_ / 2; start_histog < end_histog; start_histog += step_mhz_)
     {

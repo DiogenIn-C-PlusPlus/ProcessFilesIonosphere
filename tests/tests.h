@@ -4,8 +4,7 @@
 #include <vector>
 #include <string>
 
-#include "proccess.h"
-#include "buildhistogram.h"
+
 
 class Tests
 {

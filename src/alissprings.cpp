@@ -233,11 +233,7 @@ static std::ostream& operator<<(std::ostream& os, const FormatFilePrognosticRadi
 }
 
 // Основная функция записи в файл
-bool WritePrognosticRadioRouteAustralia(
-        const std::string& filename,
-        const std::deque<FormatFilePrognosticRadioRouteAustralia>& prognostic_route_,
-        bool append = false,
-        char delimiter = '\n')
+bool WritePrognosticRadioRouteAustralia(const std::string& filename, const std::deque<FormatFilePrognosticRadioRouteAustralia>& prognostic_route_, bool append = false, char delimiter = '\n')
 {
     std::ios::openmode mode = std::ios::out;
     if (append)
@@ -261,13 +257,13 @@ bool WritePrognosticRadioRouteAustralia(
     {
         fout << rec << delimiter;
     }
-
     fout.close();
     return true;
 }
 
 void AlisSprings::SelectionPrognosticModes()
 {
+     //   WritePrognosticRadioRouteAustralia("/home/andrew_q/Projects/Diogen/Proc_Files_Ionosphere/show_prognostic_route.txt", prognostic_route_);
     constexpr size_t count_scanning_hops = 20;
     constexpr double delta_mhz_between_modes = 5;
     bool flag_clear = false;
